@@ -2,6 +2,7 @@ package br.com.food.pagamentos.controller;
 
 import br.com.food.pagamentos.dto.PagamentoDTO;
 import br.com.food.pagamentos.service.PagamentoService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -69,7 +70,12 @@ public class PagamentoController {
     }
 
     @PatchMapping("$/{id}/confirmar")
+    @CircuitBreaker(name = "atualizaPedido", fallbackMethod = "pagamentoAutorizadoComIntegracaoPendente")
     public void confirmarPagamento(@PathVariable @NotNull Long id){
         pagamentoService.confirmarPagamento(id);
+    }
+
+    public void pagamentoAutorizadoComIntegracaoPendente(Long id, Exception e){
+        pagamentoService.alterarStatus(id);
     }
 }
